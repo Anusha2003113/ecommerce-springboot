@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Product Dashboard</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+h2 { text-align: center; }
+
+input {
+    padding: 10px;
+    margin: 5px;
+    width: 20%;
+}
+
+button {
+    padding: 8px 12px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.add-btn {
+    background: green;
+    color: white;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #007bff;
+    color: white;
+}
+
+.edit-input {
+    width: 90%;
+    padding: 5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Product Management Dashboard</h2>
+
+<!-- ADD PRODUCT -->
+<h3>Add Product</h3>
+
+<input id="name" placeholder="Name">
+<input id="price" type="number" placeholder="Price">
+<input id="description" placeholder="Description">
+<input id="quantity" type="number" placeholder="Quantity">
+
+<button class="add-btn" onclick="addProduct()">Add Product</button>
+
+<hr>
+
+<h3>Product List</h3>
+
+<button onclick="loadProducts()">Refresh</button>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Price</th>
+<th>Description</th>
+<th>Quantity</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="table"></tbody>
+
+</table>
+
+</div>
+
+<script>
+
+const API = "http://localhost:8080/products";
+
+// LOAD PRODUCTS
+function loadProducts() {
+fetch(API)
+.then(res => res.json())
+.then(data => {
+let rows = "";
+
+data.forEach(p => {
+rows += `
+<tr id="row-${p.id}">
+<td>${p.id}</td>
+
+<td><span id="name-${p.id}">${p.name}</span></td>
+<td><span id="price-${p.id}">${p.price}</span></td>
+<td><span id="desc-${p.id}">${p.description}</span></td>
+<td><span id="qty-${p.id}">${p.quantity}</span></td>
+
+<td>
+<button onclick="editMode(${p.id})">Edit</button>
+<button onclick="deleteProduct(${p.id})">Delete</button>
+<button onclick="saveProduct(${p.id})" style="display:none" id="save-${p.id}">Save</button>
+</td>
+</tr>
+`;
+});
+
+document.getElementById("table").innerHTML = rows;
+});
+}
+
+// ADD PRODUCT
+function addProduct() {
+
+const product = {
+name: document.getElementById("name").value,
+price: document.getElementById("price").value,
+description: document.getElementById("description").value,
+quantity: document.getElementById("quantity").value
+};
+
+fetch(API, {
+method: "POST",
+headers: {"Content-Type": "application/json"},
+body: JSON.stringify(product)
+})
+.then(() => {
+alert("Added!");
+loadProducts();
+});
+}
+
+// DELETE
+function deleteProduct(id) {
+fetch(API + "/" + id, { method: "DELETE" })
+.then(() => loadProducts());
+}
+
+// EDIT MODE
+function editMode(id) {
+
+let name = document.getElementById("name-" + id);
+let price = document.getElementById("price-" + id);
+let desc = document.getElementById("desc-" + id);
+let qty = document.getElementById("qty-" + id);
+
+name.innerHTML = `<input class="edit-input" id="en-${id}" value="${name.innerText}">`;
+price.innerHTML = `<input class="edit-input" id="ep-${id}" value="${price.innerText}">`;
+desc.innerHTML = `<input class="edit-input" id="ed-${id}" value="${desc.innerText}">`;
+qty.innerHTML = `<input class="edit-input" id="eq-${id}" value="${qty.innerText}">`;
+
+document.getElementById("save-" + id).style.display = "inline";
+}
+
+// SAVE PRODUCT
+function saveProduct(id) {
+
+const product = {
+name: document.getElementById("en-" + id).value,
+price: document.getElementById("ep-" + id).value,
+description: document.getElementById("ed-" + id).value,
+quantity: document.getElementById("eq-" + id).value
+};
+
+fetch(API + "/" + id, {
+method: "PUT",
+headers: {"Content-Type": "application/json"},
+body: JSON.stringify(product)
+})
+.then(() => {
+alert("Updated!");
+loadProducts();
+});
+}
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
